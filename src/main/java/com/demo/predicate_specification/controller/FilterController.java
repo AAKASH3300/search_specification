@@ -1,7 +1,9 @@
 package com.demo.predicate_specification.controller;
 
+import com.demo.predicate_specification.dto.RequestDto;
 import com.demo.predicate_specification.entity.Student;
 import com.demo.predicate_specification.repository.StudentRepository;
+import com.demo.predicate_specification.service.FiltersSpecificationService;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
@@ -19,6 +21,9 @@ public class FilterController {
     @Autowired
     private StudentRepository studentRepository;
 
+    @Autowired
+    private FiltersSpecificationService<Student> studentFiltersSpecification;
+
     @GetMapping("/{name}")
     public Student getStdByName(@PathVariable(name = "name") String name) {
         return studentRepository.findByName(name);
@@ -34,19 +39,25 @@ public class FilterController {
         return studentRepository.findBySubjectsName(subject);
     }
 
-    //Specification -> reusable
+//Specification -> reusable
+//    @PostMapping("/specification")
+//    public List<Student> getStudents() {
+//        Specification<Student> specification = new Specification<Student>() {
+//
+//            @Override
+//            public Predicate toPredicate(Root<Student> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
+//                return criteriaBuilder.equal(root.get("name"), "Aakash");
+//            }
+//        };
+//
+//        List<Student> all = studentRepository.findAll(specification);
+//        return all;
+//    }
+
     @PostMapping("/specification")
-    public List<Student> getStudents() {
-        Specification<Student> specification = new Specification<Student>() {
-
-            @Override
-            public Predicate toPredicate(Root<Student> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
-                return criteriaBuilder.equal(root.get("name"), "Aakash");
-            }
-        };
-
-        List<Student> all = studentRepository.findAll(specification);
-        return all;
+    public List<Student> getStudents(@RequestBody RequestDto requestDto) {
+        Specification<Student> searchSpecification = studentFiltersSpecification.getSearchSpecification(requestDto.getSearchRequestDto());
+        return studentRepository.findAll(searchSpecification);
     }
 
 
